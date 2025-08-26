@@ -22,6 +22,11 @@ class DemoDataSeed extends BaseSeed
     {
         $now = date('Y-m-d H:i:s');
         
+        // Clear existing demo data first
+        $this->execute('DELETE FROM comments WHERE user_id IN (SELECT id FROM users WHERE email IN ("alice@example.com", "bob@example.com", "carol@example.com"))');
+        $this->execute('DELETE FROM posts WHERE user_id IN (SELECT id FROM users WHERE email IN ("alice@example.com", "bob@example.com", "carol@example.com"))');
+        $this->execute('DELETE FROM users WHERE email IN ("alice@example.com", "bob@example.com", "carol@example.com")');
+        
         // Create 3 demo users: alice, bob, carol
         $users = [
             [
@@ -62,38 +67,43 @@ class DemoDataSeed extends BaseSeed
         $usersTable = $this->table('users');
         $usersTable->insert($users)->save();
 
+        // Get the user IDs after insertion
+        $aliceId = $this->fetchRow('SELECT id FROM users WHERE email = "alice@example.com"')['id'];
+        $bobId = $this->fetchRow('SELECT id FROM users WHERE email = "bob@example.com"')['id'];
+        $carolId = $this->fetchRow('SELECT id FROM users WHERE email = "carol@example.com"')['id'];
+
         // Create 5 demo posts
         $posts = [
             [
-                'user_id' => 1, // alice
+                'user_id' => $aliceId,
                 'title' => 'Welcome to our mini CMS',
                 'body' => 'This is the first post in our new CMS system. Hello @bob and @carol!',
                 'created' => $now,
                 'modified' => $now,
             ],
             [
-                'user_id' => 2, // bob
+                'user_id' => $bobId,
                 'title' => 'Getting Started with CakePHP',
                 'body' => 'I\'ve been exploring CakePHP and it\'s amazing! @alice you should check out the documentation.',
                 'created' => $now,
                 'modified' => $now,
             ],
             [
-                'user_id' => 3, // carol
+                'user_id' => $carolId,
                 'title' => 'Admin Features Coming Soon',
                 'body' => 'As an admin, I\'m working on some new features. Stay tuned @alice and @bob!',
                 'created' => $now,
                 'modified' => $now,
             ],
             [
-                'user_id' => 1, // alice
+                'user_id' => $aliceId,
                 'title' => 'Community Guidelines',
                 'body' => 'Let\'s keep our discussions respectful and helpful for everyone.',
                 'created' => $now,
                 'modified' => $now,
             ],
             [
-                'user_id' => 2, // bob
+                'user_id' => $bobId,
                 'title' => 'Tips and Tricks',
                 'body' => 'Share your favorite development tips here! @carol what are your thoughts?',
                 'created' => $now,
@@ -104,60 +114,63 @@ class DemoDataSeed extends BaseSeed
         $postsTable = $this->table('posts');
         $postsTable->insert($posts)->save();
 
+        // Get the post IDs after insertion
+        $postIds = $this->fetchAll('SELECT id FROM posts ORDER BY id');
+
         // Create 8 demo comments
         $comments = [
             [
-                'post_id' => 1,
-                'user_id' => 2, // bob
+                'post_id' => $postIds[0]['id'],
+                'user_id' => $bobId,
                 'body' => 'Great to see this CMS up and running! Thanks @alice for setting this up.',
                 'created' => $now,
                 'modified' => $now,
             ],
             [
-                'post_id' => 1,
-                'user_id' => 3, // carol
+                'post_id' => $postIds[0]['id'],
+                'user_id' => $carolId,
                 'body' => 'Looking forward to contributing more content!',
                 'created' => $now,
                 'modified' => $now,
             ],
             [
-                'post_id' => 2,
-                'user_id' => 1, // alice
+                'post_id' => $postIds[1]['id'],
+                'user_id' => $aliceId,
                 'body' => 'Thanks for the recommendation @bob! The docs are really comprehensive.',
                 'created' => $now,
                 'modified' => $now,
             ],
             [
-                'post_id' => 2,
-                'user_id' => 3, // carol
+                'post_id' => $postIds[1]['id'],
+                'user_id' => $carolId,
                 'body' => 'CakePHP has been great for rapid development.',
                 'created' => $now,
                 'modified' => $now,
             ],
             [
-                'post_id' => 3,
-                'user_id' => 1, // alice
+                'post_id' => $postIds[2]['id'],
+                'user_id' => $aliceId,
                 'body' => 'Excited to see what new features you\'ll add @carol!',
                 'created' => $now,
                 'modified' => $now,
             ],
             [
-                'post_id' => 3,
-                'user_id' => 2, // bob
+                'post_id' => $postIds[2]['id'],
+                'user_id' => $bobId,
                 'body' => 'Admin features sound interesting. Keep us posted!',
                 'created' => $now,
                 'modified' => $now,
             ],
             [
-                'post_id' => 4,
-                'user_id' => 2, // bob
+                'post_id' => $postIds[3]['id'],
+                'user_id' => $bobId,
                 'body' => 'Absolutely agree with these guidelines @alice.',
                 'created' => $now,
                 'modified' => $now,
             ],
             [
-                'post_id' => 5,
-                'user_id' => 3, // carol
+                'post_id' => $postIds[4]['id'],
+                'user_id' => $carolId,
                 'body' => 'One tip: always test your code thoroughly! What do you think @bob?',
                 'created' => $now,
                 'modified' => $now,

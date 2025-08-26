@@ -288,14 +288,8 @@ Rules:
 6.	Don’t overwrite unrelated code; keep changes minimal; follow Cake conventions.
 7.	When something in SPEC is ambiguous, suggest a sensible default and proceed.
 
-First task:
-•	Install/confirm cakephp/authentication, cakephp/authorization, and cakephp/migrations.
-•	Wire middleware in src/Application.php.
-•	Add email transport via env in config/app.php or app_local.php (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, APP_URL).
-•	Update README with local setup & Mailpit instructions.
-Then stop and show diffs + commands to run (ddev exec bin/cake ...).
 
-⸻
+
 
 
 
