@@ -60,7 +60,14 @@
                 <?php if (!empty($currentUser)): ?>
                     <?= $this->Html->link('Home', '/', ['class' => 'nav-link']) ?>
                     <?= $this->Html->link('New Post', '/posts/add', ['class' => 'btn btn-success']) ?>
-                    <?= $this->Html->link('Notifications', '/notifications', ['class' => 'nav-link']) ?>
+                    <div style="position: relative; display: inline-block;">
+                        <?= $this->Html->link('Notifications', '/notifications', ['class' => 'nav-link']) ?>
+                        <?php if (!empty($unreadNotifications) && $unreadNotifications > 0): ?>
+                            <span style="position: absolute; top: -8px; right: -8px; background: #dc3545; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold;">
+                                <?= $unreadNotifications > 9 ? '9+' : $unreadNotifications ?>
+                            </span>
+                        <?php endif; ?>
+                    </div>
                     <?= $this->Html->link('@' . $currentUser->username, '/u/' . $currentUser->username, ['class' => 'nav-link']) ?>
                     <?= $this->Html->link('Logout', '/logout', ['class' => 'nav-link']) ?>
                 <?php else: ?>

@@ -11,17 +11,39 @@ namespace App\Controller;
 class NotificationsController extends AppController
 {
     /**
-     * Index method
+     * Index method - Show current user's notifications
      *
      * @return \Cake\Http\Response|null|void Renders view
      */
     public function index()
     {
-        $query = $this->Notifications->find()
-            ->contain(['RecipientUsers', 'ActorUsers']);
-        $notifications = $this->paginate($query);
+        $currentUser = $this->Authentication->getIdentity();
+        
+        // Get user's notifications with related data
+        $notifications = $this->Notifications->find()
+            ->contain([
+                'ActorUsers' => ['fields' => ['id', 'username', 'display_name']]
+            ])
+            ->where(['recipient_user_id' => $currentUser->id])
+            ->orderByDesc('created')
+            ->limit(50)
+            ->toArray();
 
-        $this->set(compact('notifications'));
+        // Get unread count
+        $unreadCount = $this->Notifications->find()
+            ->where([
+                'recipient_user_id' => $currentUser->id,
+                'is_read' => false
+            ])
+            ->count();
+
+        // Mark all notifications as read when viewing
+        $this->Notifications->updateAll(
+            ['is_read' => true],
+            ['recipient_user_id' => $currentUser->id, 'is_read' => false]
+        );
+
+        $this->set(compact('notifications', 'unreadCount'));
     }
 
     /**
@@ -98,6 +120,44 @@ class NotificationsController extends AppController
             $this->Flash->success(__('The notification has been deleted.'));
         } else {
             $this->Flash->error(__('The notification could not be deleted. Please, try again.'));
+        }
+
+        return $this->redirect(['action' => 'index']);
+    }
+
+    /**
+     * Mark a specific notification as read
+     *
+     * @param string|null $id Notification id.
+     * @return \Cake\Http\Response Redirects to notification target
+     */
+    public function markRead($id = null)
+    {
+        $currentUser = $this->Authentication->getIdentity();
+        
+        $notification = $this->Notifications->find()
+            ->where([
+                'id' => $id,
+                'recipient_user_id' => $currentUser->id
+            ])
+            ->first();
+
+        if (!$notification) {
+            $this->Flash->error(__('Notification not found.'));
+            return $this->redirect(['action' => 'index']);
+        }
+
+        // Mark as read
+        $notification->is_read = true;
+        $this->Notifications->save($notification);
+
+        // Redirect to the relevant content
+        if ($notification->entity_type === 'post') {
+            return $this->redirect(['controller' => 'Posts', 'action' => 'view', $notification->entity_id]);
+        } elseif ($notification->entity_type === 'comment') {
+            // Get the post ID from the comment
+            $comment = $this->fetchTable('Comments')->get($notification->entity_id);
+            return $this->redirect(['controller' => 'Posts', 'action' => 'view', $comment->post_id]);
         }
 
         return $this->redirect(['action' => 'index']);

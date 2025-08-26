@@ -68,5 +68,16 @@ class AppController extends Controller
         
         // Make user available in templates
         $this->set('currentUser', $user);
+        
+        // Get unread notification count for authenticated users
+        if ($user) {
+            $unreadNotifications = $this->fetchTable('Notifications')->find()
+                ->where([
+                    'recipient_user_id' => $user->id,
+                    'is_read' => false
+                ])
+                ->count();
+            $this->set('unreadNotifications', $unreadNotifications);
+        }
     }
 }
