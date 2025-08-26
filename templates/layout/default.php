@@ -14,7 +14,6 @@
  * @var \App\View\AppView $this
  */
 
-$cakeDescription = 'CakePHP: the rapid development php framework';
 ?>
 <!DOCTYPE html>
 <html>
@@ -22,27 +21,55 @@ $cakeDescription = 'CakePHP: the rapid development php framework';
     <?= $this->Html->charset() ?>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>
-        <?= $cakeDescription ?>:
-        <?= $this->fetch('title') ?>
+        <?= $this->fetch('title') ? $this->fetch('title') . ' - ' : '' ?>CMS
     </title>
     <?= $this->Html->meta('icon') ?>
 
     <?= $this->Html->css(['normalize.min', 'milligram.min', 'fonts', 'cake']) ?>
+    <style>
+        .header { background: #333; color: white; padding: 1rem 0; }
+        .header-content { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 2rem; }
+        .header h1 { margin: 0; }
+        .header h1 a { color: white; text-decoration: none; }
+        .nav-links { display: flex; gap: 1rem; align-items: center; }
+        .nav-links a { color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 4px; }
+        .nav-links a:hover { background: rgba(255,255,255,0.1); }
+        .btn { display: inline-block; padding: 0.5rem 1rem; background: #007bff; color: white; text-decoration: none; border-radius: 4px; border: none; cursor: pointer; }
+        .btn:hover { background: #0056b3; color: white; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #1e7e34; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+        .post-card { background: white; border: 1px solid #ddd; border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+        .post-meta { color: #666; font-size: 0.9rem; margin-bottom: 1rem; }
+        .post-title { margin: 0 0 1rem 0; }
+        .post-body { line-height: 1.6; margin-bottom: 1rem; }
+        .post-actions { border-top: 1px solid #eee; padding-top: 1rem; }
+        .form-container { max-width: 600px; margin: 0 auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .auth-form { max-width: 400px; margin: 2rem auto; }
+    </style>
 
     <?= $this->fetch('meta') ?>
     <?= $this->fetch('css') ?>
     <?= $this->fetch('script') ?>
 </head>
 <body>
-    <nav class="top-nav">
-        <div class="top-nav-title">
-            <a href="<?= $this->Url->build('/') ?>"><span>Cake</span>PHP</a>
+    <header class="header">
+        <div class="header-content">
+            <h1><?= $this->Html->link('CMS', '/') ?></h1>
+            <nav class="nav-links">
+                <?php if (!empty($currentUser)): ?>
+                    <?= $this->Html->link('Home', '/', ['class' => 'nav-link']) ?>
+                    <?= $this->Html->link('New Post', '/posts/add', ['class' => 'btn btn-success']) ?>
+                    <?= $this->Html->link('Notifications', '/notifications', ['class' => 'nav-link']) ?>
+                    <?= $this->Html->link('@' . $currentUser->username, '/u/' . $currentUser->username, ['class' => 'nav-link']) ?>
+                    <?= $this->Html->link('Logout', '/logout', ['class' => 'nav-link']) ?>
+                <?php else: ?>
+                    <?= $this->Html->link('Login', '/login', ['class' => 'btn']) ?>
+                    <?= $this->Html->link('Register', '/register', ['class' => 'nav-link']) ?>
+                <?php endif; ?>
+            </nav>
         </div>
-        <div class="top-nav-links">
-            <a target="_blank" rel="noopener" href="https://book.cakephp.org/5/">Documentation</a>
-            <a target="_blank" rel="noopener" href="https://api.cakephp.org/">API</a>
-        </div>
-    </nav>
+    </header>
     <main class="main">
         <div class="container">
             <?= $this->Flash->render() ?>

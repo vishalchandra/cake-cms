@@ -1,90 +1,89 @@
 <?php
-/**
- * @var \App\View\AppView $this
- * @var \App\Model\Entity\Post $post
- */
+$this->assign('title', h($post->title));
+
+// Function to convert @mentions to links
+function formatMentions($text) {
+    return preg_replace('/@([a-z0-9_]{3,30})/i', '<a href="/u/$1">@$1</a>', h($text));
+}
 ?>
-<div class="row">
-    <aside class="column">
-        <div class="side-nav">
-            <h4 class="heading"><?= __('Actions') ?></h4>
-            <?= $this->Html->link(__('Edit Post'), ['action' => 'edit', $post->id], ['class' => 'side-nav-item']) ?>
-            <?= $this->Form->postLink(__('Delete Post'), ['action' => 'delete', $post->id], ['confirm' => __('Are you sure you want to delete # {0}?', $post->id), 'class' => 'side-nav-item']) ?>
-            <?= $this->Html->link(__('List Posts'), ['action' => 'index'], ['class' => 'side-nav-item']) ?>
-            <?= $this->Html->link(__('New Post'), ['action' => 'add'], ['class' => 'side-nav-item']) ?>
+
+<div style="margin: 2rem 0;">
+    <!-- Post Content -->
+    <article class="post-card">
+        <div class="post-meta">
+            <?= $this->Html->link(
+                '@' . $post->user->username . ' (' . $post->user->display_name . ')', 
+                '/u/' . $post->user->username
+            ) ?> 
+            • <?= $post->created->format('M j, Y \a\t g:i A') ?>
+            • <?= count($post->comments) ?> <?= __n('comment', 'comments', count($post->comments)) ?>
         </div>
-    </aside>
-    <div class="column column-80">
-        <div class="posts view content">
-            <h3><?= h($post->title) ?></h3>
-            <table>
-                <tr>
-                    <th><?= __('User') ?></th>
-                    <td><?= $post->hasValue('user') ? $this->Html->link($post->user->email, ['controller' => 'Users', 'action' => 'view', $post->user->id]) : '' ?></td>
-                </tr>
-                <tr>
-                    <th><?= __('Title') ?></th>
-                    <td><?= h($post->title) ?></td>
-                </tr>
-                <tr>
-                    <th><?= __('Id') ?></th>
-                    <td><?= $this->Number->format($post->id) ?></td>
-                </tr>
-                <tr>
-                    <th><?= __('Created') ?></th>
-                    <td><?= h($post->created) ?></td>
-                </tr>
-                <tr>
-                    <th><?= __('Modified') ?></th>
-                    <td><?= h($post->modified) ?></td>
-                </tr>
-            </table>
-            <div class="text">
-                <strong><?= __('Body') ?></strong>
-                <blockquote>
-                    <?= $this->Text->autoParagraph(h($post->body)); ?>
-                </blockquote>
-            </div>
-            <div class="related">
-                <h4><?= __('Related Comments') ?></h4>
-                <?php if (!empty($post->comments)) : ?>
-                <div class="table-responsive">
-                    <table>
-                        <tr>
-                            <th><?= __('Id') ?></th>
-                            <th><?= __('Post Id') ?></th>
-                            <th><?= __('User Id') ?></th>
-                            <th><?= __('Body') ?></th>
-                            <th><?= __('Created') ?></th>
-                            <th><?= __('Modified') ?></th>
-                            <th class="actions"><?= __('Actions') ?></th>
-                        </tr>
-                        <?php foreach ($post->comments as $comment) : ?>
-                        <tr>
-                            <td><?= h($comment->id) ?></td>
-                            <td><?= h($comment->post_id) ?></td>
-                            <td><?= h($comment->user_id) ?></td>
-                            <td><?= h($comment->body) ?></td>
-                            <td><?= h($comment->created) ?></td>
-                            <td><?= h($comment->modified) ?></td>
-                            <td class="actions">
-                                <?= $this->Html->link(__('View'), ['controller' => 'Comments', 'action' => 'view', $comment->id]) ?>
-                                <?= $this->Html->link(__('Edit'), ['controller' => 'Comments', 'action' => 'edit', $comment->id]) ?>
-                                <?= $this->Form->postLink(
-                                    __('Delete'),
-                                    ['controller' => 'Comments', 'action' => 'delete', $comment->id],
-                                    [
-                                        'method' => 'delete',
-                                        'confirm' => __('Are you sure you want to delete # {0}?', $comment->id),
-                                    ]
-                                ) ?>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </table>
+        
+        <h1 class="post-title"><?= h($post->title) ?></h1>
+        
+        <div class="post-body">
+            <?= nl2br(formatMentions($post->body)) ?>
+        </div>
+        
+        <div class="post-actions">
+            <?= $this->Html->link('← Back to Feed', '/', ['class' => 'btn']) ?>
+            <?php if (!empty($currentUser) && $currentUser->id === $post->user_id): ?>
+                <?= $this->Html->link('Edit', ['action' => 'edit', $post->id], ['class' => 'btn']) ?>
+            <?php endif; ?>
+        </div>
+    </article>
+
+    <!-- Comments Section -->
+    <div style="margin-top: 3rem;">
+        <h3 style="border-bottom: 2px solid #ddd; padding-bottom: 0.5rem;">
+            Comments (<?= count($post->comments) ?>)
+        </h3>
+        
+        <?php if (!empty($post->comments)): ?>
+            <?php foreach ($post->comments as $comment): ?>
+                <div class="post-card" style="margin-left: 2rem; border-left: 3px solid #007bff;">
+                    <div class="post-meta">
+                        <?= $this->Html->link(
+                            '@' . $comment->user->username . ' (' . $comment->user->display_name . ')', 
+                            '/u/' . $comment->user->username
+                        ) ?> 
+                        • <?= $comment->created->timeAgoInWords() ?>
+                    </div>
+                    <div class="post-body">
+                        <?= nl2br(formatMentions($comment->body)) ?>
+                    </div>
                 </div>
-                <?php endif; ?>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <p style="text-align: center; color: #666; margin: 2rem 0;">No comments yet.</p>
+        <?php endif; ?>
+        
+        <!-- Comment Form -->
+        <?php if (!empty($currentUser)): ?>
+            <div id="comment-form" class="post-card" style="margin-top: 2rem; background: #f8f9fa;">
+                <h4>Add a Comment</h4>
+                <?= $this->Form->create($comment, [
+                    'url' => '/posts/' . $post->id . '/comments/add'
+                ]) ?>
+                <fieldset>
+                    <?= $this->Form->control('body', [
+                        'type' => 'textarea',
+                        'label' => false,
+                        'placeholder' => 'Write your comment... Use @username to mention other users.',
+                        'rows' => 4,
+                        'maxlength' => 2000,
+                        'required' => true
+                    ]) ?>
+                </fieldset>
+                <div style="margin-top: 1rem;">
+                    <?= $this->Form->button('Post Comment', ['class' => 'btn btn-success']) ?>
+                </div>
+                <?= $this->Form->end() ?>
             </div>
-        </div>
+        <?php else: ?>
+            <div style="text-align: center; margin: 2rem 0;">
+                <?= $this->Html->link('Login to comment', '/login', ['class' => 'btn']) ?>
+            </div>
+        <?php endif; ?>
     </div>
 </div>
