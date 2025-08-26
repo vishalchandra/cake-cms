@@ -17,6 +17,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use Cake\Controller\Controller;
+use Cake\Event\EventInterface;
 
 /**
  * Application Controller
@@ -42,11 +43,30 @@ class AppController extends Controller
         parent::initialize();
 
         $this->loadComponent('Flash');
+        $this->loadComponent('Authentication.Authentication');
+        $this->loadComponent('Authorization.Authorization');
 
         /*
          * Enable the following component for recommended CakePHP form protection settings.
          * see https://book.cakephp.org/5/en/controllers/components/form-protection.html
          */
         //$this->loadComponent('FormProtection');
+    }
+
+    public function beforeFilter(EventInterface $event)
+    {
+        parent::beforeFilter($event);
+        
+        // Get current user
+        $user = $this->Authentication->getIdentity();
+        
+        // Redirect unverified users to login (except for auth actions)
+        if ($user && !$user->email_verified && $this->request->getParam('controller') !== 'Auth') {
+            $this->Flash->error(__('Please verify your email address before continuing.'));
+            return $this->redirect(['controller' => 'Auth', 'action' => 'login']);
+        }
+        
+        // Make user available in templates
+        $this->set('currentUser', $user);
     }
 }

@@ -50,12 +50,32 @@ return function (RouteBuilder $routes): void {
     $routes->setRouteClass(DashedRoute::class);
 
     $routes->scope('/', function (RouteBuilder $builder): void {
-        /*
-         * Here, we are connecting '/' (base path) to a controller called 'Pages',
-         * its action called 'display', and we pass a param to select the view file
-         * to use (in this case, templates/Pages/home.php)...
-         */
-        $builder->connect('/', ['controller' => 'Pages', 'action' => 'display', 'home']);
+        // Feed route (home page)
+        $builder->connect('/', ['controller' => 'Feed', 'action' => 'index']);
+        
+        // Authentication routes
+        $builder->connect('/login', ['controller' => 'Auth', 'action' => 'login']);
+        $builder->connect('/register', ['controller' => 'Auth', 'action' => 'register']);
+        $builder->connect('/logout', ['controller' => 'Auth', 'action' => 'logout']);
+        $builder->connect('/verify', ['controller' => 'Auth', 'action' => 'verify']);
+        $builder->connect('/password/forgot', ['controller' => 'Auth', 'action' => 'forgotPassword']);
+        $builder->connect('/password/reset', ['controller' => 'Auth', 'action' => 'resetPassword']);
+        
+        // User profile routes
+        $builder->connect('/u/{username}', ['controller' => 'Profiles', 'action' => 'view'])
+            ->setPass(['username']);
+        
+        // Posts routes
+        $builder->connect('/posts/add', ['controller' => 'Posts', 'action' => 'add']);
+        $builder->connect('/posts/{id}', ['controller' => 'Posts', 'action' => 'view'])
+            ->setPass(['id'])->setPatterns(['id' => '\d+']);
+        $builder->connect('/posts/{id}/comments/add', ['controller' => 'Comments', 'action' => 'add'])
+            ->setPass(['id'])->setPatterns(['id' => '\d+']);
+        
+        // Notifications routes
+        $builder->connect('/notifications', ['controller' => 'Notifications', 'action' => 'index']);
+        $builder->connect('/notifications/{id}/read', ['controller' => 'Notifications', 'action' => 'markRead'])
+            ->setPass(['id'])->setPatterns(['id' => '\d+']);
 
         /*
          * ...and connect the rest of 'Pages' controller's URLs.

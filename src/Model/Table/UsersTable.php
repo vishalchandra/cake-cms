@@ -117,6 +117,19 @@ class UsersTable extends Table
             ->notEmptyString('role')
             ->inList('role', ['user', 'admin']);
 
+        // Password confirmation validation
+        $validator
+            ->scalar('password')
+            ->minLength('password', 8)
+            ->requirePresence('password', 'create')
+            ->notEmptyString('password');
+
+        $validator
+            ->scalar('confirm_password')
+            ->requirePresence('confirm_password', 'create')
+            ->notEmptyString('confirm_password')
+            ->sameAs('password', 'Passwords do not match');
+
         return $validator;
     }
 
