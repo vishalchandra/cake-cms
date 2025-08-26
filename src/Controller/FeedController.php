@@ -5,29 +5,38 @@ namespace App\Controller;
 
 class FeedController extends AppController
 {
+    public function initialize(): void
+    {
+        parent::initialize();
+        $this->loadComponent('Paginator');
+    }
+
     public function index()
     {
         $postsTable = $this->fetchTable('Posts');
         
-        // Get recent posts with their authors and comment counts
-        $posts = $postsTable->find()
-            ->contain([
+        // Configure pagination settings
+        $this->paginate = [
+            'limit' => 20,
+            'order' => [
+                'Posts.created' => 'DESC'
+            ],
+            'contain' => [
                 'Users' => [
                     'fields' => ['id', 'username', 'display_name']
+                ],
+                'Comments' => [
+                    'Users' => [
+                        'fields' => ['id', 'username', 'display_name']
+                    ],
+                    'limit' => 3,
+                    'order' => ['Comments.created' => 'DESC']
                 ]
-            ])
-            ->select([
-                'Posts.id',
-                'Posts.title', 
-                'Posts.body',
-                'Posts.created',
-                'Posts.user_id',
-                'comment_count' => $postsTable->find()->func()->count('Comments.id')
-            ])
-            ->leftJoinWith('Comments')
-            ->groupBy(['Posts.id', 'Posts.title', 'Posts.body', 'Posts.created', 'Posts.user_id', 'Users.id', 'Users.username', 'Users.display_name'])
-            ->orderByDesc('Posts.created')
-            ->limit(20);
+            ]
+        ];
+        
+        // Get paginated posts with eager-loaded authors and recent comments
+        $posts = $this->paginate($postsTable);
 
         $this->set(compact('posts'));
     }

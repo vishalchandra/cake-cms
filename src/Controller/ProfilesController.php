@@ -5,6 +5,12 @@ namespace App\Controller;
 
 class ProfilesController extends AppController
 {
+    public function initialize(): void
+    {
+        parent::initialize();
+        $this->loadComponent('Paginator');
+    }
+
     public function view($username = null)
     {
         if (!$username) {
@@ -21,30 +27,43 @@ class ProfilesController extends AppController
             return $this->redirect('/');
         }
 
-        // Get user's posts with comment counts
-        $posts = $this->fetchTable('Posts')->find()
-            ->contain([
-                'Users' => ['fields' => ['id', 'username', 'display_name']]
-            ])
-            ->select([
-                'Posts.id',
-                'Posts.title', 
-                'Posts.body',
-                'Posts.created',
-                'Posts.user_id',
-                'comment_count' => $this->fetchTable('Posts')->find()->func()->count('Comments.id')
-            ])
-            ->leftJoinWith('Comments')
-            ->where(['Posts.user_id' => $user->id])
-            ->groupBy(['Posts.id'])
-            ->orderByDesc('Posts.created')
-            ->limit(20);
+        $postsTable = $this->fetchTable('Posts');
+        
+        // Configure pagination for user's posts
+        $this->paginate = [
+            'limit' => 10,
+            'order' => [
+                'Posts.created' => 'DESC'
+            ],
+            'conditions' => [
+                'Posts.user_id' => $user->id
+            ],
+            'contain' => [
+                'Comments' => [
+                    'Users' => [
+                        'fields' => ['id', 'username', 'display_name']
+                    ],
+                    'limit' => 3,
+                    'order' => ['Comments.created' => 'DESC']
+                ]
+            ]
+        ];
+        
+        // Get paginated posts
+        $posts = $this->paginate($postsTable);
 
-        // Get post count
+        // Get user statistics
         $postCount = $this->fetchTable('Posts')->find()
             ->where(['user_id' => $user->id])
             ->count();
 
-        $this->set(compact('user', 'posts', 'postCount'));
+        $commentCount = $this->fetchTable('Comments')->find()
+            ->where(['user_id' => $user->id])
+            ->count();
+
+        // Get join date
+        $joinDate = $user->created;
+
+        $this->set(compact('user', 'posts', 'postCount', 'commentCount', 'joinDate'));
     }
 }
